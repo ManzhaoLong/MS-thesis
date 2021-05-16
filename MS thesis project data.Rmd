@@ -1,0 +1,148 @@
+---
+title: "von frey"
+author: "ML"
+date: "4/1/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+von Frey male vs. female (n=12)
+```{r VonFrey}
+library(ggpubr)
+library(rstatix)
+baseline2$Sex <- as.factor(baseline2$Sex)
+baseline2$mType3 <- as.factor(baseline$mType3)
+
+post.surgery2$Sex <- as.factor(post.surgery2$Sex)
+post.surgery2$mType4 <- as.factor(post.surgery2$mType4)
+
+stat.test4 <- baseline %>% t_test(means ~ Sex) %>% add_xy_position(x = "Sex")
+stat.test4
+p9 <-ggbarplot(baseline2, x = "Sex", y = "Force", add = "mean_se", color = "Side", palette = "lancet", xlab = "", ylab = "baseline mean force (g)", xlim = c(1,4), position = position_dodge(0.8)) +
+  stat_pvalue_manual(stat.test4, y.position = 3.8, label = "p", tip.length = 0.01)+
+  stat_compare_means(aes(group = Sex), label = "p.signif", label.y = 4, label.x = 1.5)
+ggpar(p9, legend = c("left"), legend.title = "")
+
+p10 <-ggbarplot(post.surgery2, x = "Sex", y = "Force", add = "mean_se", color = "Side", palette = "lancet", xlab = "", ylab = "post-surgery mean force (g)", position = position_dodge(0.8), facet.by = "mType4")
+ggpar(p10, legend = c("left"), legend.title = "")
+```
+
+lateralization
+```{r}
+library(tidyverse)
+library(latex2exp)
+
+ggpaired(DataTotal, cond1 = "PLC...L", cond2 = "PLC...R", line.color = "gray",line.size = 0.4, xlab = "", ylab = TeX("NKCC1 punta/$10^3\\mu m^2$"), facet.by = "mType")
+ggpar(p11, legend = c("left"), legend.title = "PLC")+
+  stat_compare_means()
+
+ggpaired(DataTotal, cond1 = "ILC...L", cond2 = "ILC...R", line.color = "gray",line.size = 0.4 , palette = "#00AFBB", xlab = "", ylab = TeX("NKCC1 punta/$10^3\\mu m^2$"), facet.by = "mType")+
+  stat_compare_means()
+
+ggpaired(KCC2, cond1 = "PLC.L", cond2 = "PLC.R",line.color = "gray",line.size = 0.4, xlab = "", ylab = TeX("KCC2 punta/$10^3\\mu m^2$"), facet.by = "mType2")+
+  stat_compare_means()
+
+ggpaired(KCC2, cond1 = "ILC.L", cond2 = "PLC.R",line.color = "gray",line.size = 0.4, xlab = "", ylab = TeX("KCC2 punta/$10^3\\mu m^2$"), facet.by = "mType2")+
+  stat_compare_means()
+
+
+```
+
+NKCC1 two-way ANOVA: SNI vs sham; female vs male
+```{r}
+NKCC1$Sex <- as.factor(NKCC1$Sex)
+NKCC1$mType <- factor(NKCC1$mType)
+
+library(latex2exp)
+library(ggpubr)
+library(rstatix)
+p1<-ggboxplot (NKCC1, x = "mType", y = "PLC", color = "mType", palette = c("jco"), add = "jitter", xlab = "", ylab = TeX("NKCC1 punta/$10^3\\mu m^2$"), ylim = c(13,27), facet.by = "Sex")
+ggpar(p1, legend = "left", legend.title = "PLC")
+
+
+p2<-ggboxplot(NKCC1, x = "mType", y = "ILC", color = "mType", palette = c("jco"), add = "jitter", xlab = "", ylab = TeX("NKCC1 punta/$10^3\\mu m^2$"), ylim = c(13,27), facet.by = "Sex")
+ggpar(p2, legend = "left", legend.title = "ILC")
+
+AovDataPL <- aov(NKCC1$PLC ~ sex * injType, data = NKCC1)
+AovDataIL <- aov(NKCC1$ILC ~ sex * injType, data = NKCC1)
+summary(AovDataPL)
+TukeyHSD(AovDataPL)
+summary(AovDataIL)
+TukeyHSD(AovDataIL)
+```
+```{r}
+library(ggpubr)
+stat.test2 <- NKCC1 %>% t_test(PLC ~ mType) %>% add_xy_position(x = "mType")
+stat.test2
+
+p7 <- ggboxplot(NKCC1, x = "mType", y = "PLC", color = "mType", palette = c("jco"), add = "jitter", xlab = "", ylab = TeX("PLC NKCC1 punta/$10^3\\mu m^2$"), ylim = c(10,30), xlim = c(1,4), width = 0.7) +
+  stat_pvalue_manual(stat.test2, y.position = 28, label = "p", tip.length = 0.01)+
+  stat_compare_means(aes (label = ..p.signif..), label.x = 1.5, label.y = 30)
+ggpar(p7, legend = "bottom", legend.title = "")
+
+stat.test3 <- NKCC1 %>% t_test(ILC ~ mType) %>% add_xy_position(x = "mType2")
+stat.test3
+p8 <- ggboxplot(NKCC1, x = "mType", y = "ILC", color = "mType", palette = c("jco"), add = "jitter", xlab = "", ylab = TeX("ILC NKCC1 punta/$10^3\\mu m^2$"), ylim = c(12,32), xlim = c(1,4), width = 0.7) +
+  stat_pvalue_manual(stat.test3, y.position = 29, label = "p", tip.length = 0.01)+
+  stat_compare_means(aes (label = ..p.signif..), label.x = 1.5, label.y = 31)
+ggpar(p8, legend = "bottom", legend.title = "")
+```
+
+KCC2
+```{r}
+KCC2$mType2 <- as.factor(KCC2$mType2)
+KCC2$sex <- as.factor(KCC2$sex)
+
+library(ggpubr)
+library(rstatix)
+library(latex2exp)
+
+group3 <- list(c("SHAM", "SNI"))
+p3 <-ggboxplot (KCC2, x = "mType2", y = "PLC2", color = "mType2", palette = c("jco"), add = "jitter", xlab = "", ylab = TeX("KCC2 punta/$10^3\\mu m^2$"), ylim = c(35, 110), facet.by = "sex") 
+ggpar(p3, legend = "left", legend.title = "PLC")
+
+group4 <- list(c("SHAM", "SNI"))
+p4 <-ggboxplot(KCC2, x = "mType2", y = "ILC2", color = "mType2", palette = c("jco"), add = "jitter", xlab = "", ylab = TeX("KCC2 punta/$10^3\\mu m^2$"), ylim = c(45,120), facet.by = "sex") 
+ggpar(p4, legend = "left", legend.title = "ILC")
+
+AovDataIL2 <- aov (KCC2$ILC2 ~ sex * mType2, data = KCC2)
+summary(AovDataIL2)
+TukeyHSD(AovDataIL2)
+AovDataPL2 <- aov (KCC2$PLC2 ~ sex * mType2, data = KCC2)
+summary(AovDataPL2)
+TukeyHSD(AovDataPL2)
+
+```
+
+```{r}
+library(ggpubr)
+stat.test <- KCC2 %>% t_test(PLC2 ~ mType2) %>% add_xy_position(x = "mType2")
+stat.test
+
+p5 <- ggboxplot(KCC2, x = "mType2", y = "PLC2", color = "mType2", palette = c("jco"), add = "jitter", xlab = "", ylab = TeX("PLC KCC2 punta/$10^3\\mu m^2$"), ylim = c(40,120), xlim = c(1,4), width = 0.7) +
+  stat_pvalue_manual(stat.test, y.position = 112, label = "p", tip.length = 0.01)+
+  stat_compare_means(aes (label = ..p.signif..), label.x = 1.5, label.y = 119)
+ggpar(p5, legend = "bottom", legend.title = "")
+
+stat.test1 <- KCC2 %>% t_test(ILC2 ~ mType2) %>% add_xy_position(x = "mType2")
+stat.test1
+p6 <- ggboxplot(KCC2, x = "mType2", y = "ILC2", color = "mType2", palette = c("jco"), add = "jitter", xlab = "", ylab = TeX("ILC KCC2 punta/$10^3\\mu m^2$"), ylim = c(40,125), xlim = c(1,4), width = 0.7) +
+  stat_pvalue_manual(stat.test1, y.position = 117, label = "p", tip.length = 0.01)+
+  stat_compare_means(aes (label = ..p.signif..), label.x = 1.5, label.y = 124)
+ggpar(p6, legend = "bottom", legend.title = "")
+
+
+```
+
+
+checking ANOVA assumptions
+```{r}
+plot(AovDataPL,2)
+plot(AovDataPL,1)
+plot(AovDataIL,2)
+plot(AovDataIL,1)
+```
+
